@@ -1,0 +1,274 @@
+<?xml version="1.0" encoding="US-ASCII"?>
+<!-- This template is for creating an Internet Draft using xml2rfc,
+     which is available here: http://xml.resource.org. -->
+<!DOCTYPE rfc SYSTEM "rfc2629.dtd" [
+<!-- One method to get references from the online citation libraries.
+     There has to be one entity for each item to be referenced.
+     An alternate method (rfc include) is described in the references. -->
+
+<!ENTITY RFC2119 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.2119.xml">
+<!ENTITY RFC6550 SYSTEM "http://xml.resource.org/public/rfc/bibxml/reference.RFC.6550.xml">
+]>
+<?xml-stylesheet type='text/xsl' href='rfc2629.xslt' ?>
+<?rfc strict="yes" ?>
+<?rfc toc="yes"?>
+<?rfc tocdepth="4"?>
+<?rfc symrefs="yes"?>
+<?rfc sortrefs="yes" ?>
+<?rfc compact="yes" ?>
+<!-- do not start each main section on a new page -->
+<?rfc subcompact="no" ?>
+<!-- keep one blank line between list items -->
+<!-- end of list of popular I-D processing instructions -->
+<rfc category="std" docName="draft-jadhav-roll-storing-rootack-latest" ipr="trust200902">
+    <!-- category values: std, bcp, info, exp, and historic
+     ipr values: full3667, noModification3667, noDerivatives3667
+     you can add the attributes updates="NNNN" and obsoletes="NNNN"
+     they will automatically be output with "(if approved)" -->
+
+  <!-- ***** FRONT MATTER ***** -->
+
+  <front>
+
+    <title abbrev="Storing Root Ack">RPL Storing Root Ack</title>
+
+    <author fullname="Rahul Arvind Jadhav" initials="R.A." role="editor" surname="Jadhav">
+        <organization>Huawei</organization>
+        <address>
+            <postal>
+                <street>Whitefield,</street>
+                <city>Bangalore</city>
+                <region>Karnataka</region>
+                <code>560037</code>
+                <country>India</country>
+            </postal>
+            <email>rahul.ietf@gmail.com</email>
+        </address>
+    </author>
+
+    <date year="2020" />
+    <area>Routing</area>
+    <workgroup>ROLL</workgroup>
+
+    <keyword>RPL, root, ack</keyword>
+
+    <abstract>
+        <t>
+            This document explains problems with DAO-ACK handling in RPL
+            Storing MOP and provides mechanisms to solve those problems.
+        </t>
+    </abstract>
+</front>
+
+<middle>
+    <section title="Motivation">
+        <t>
+            The primary motivation for this draft is to enlist different issues
+            with RPL operation and invoke a discussion within the working
+            group. This draft by itself is not intended for RFC tracks but as a
+            WG discussion track. This draft may in turn result in other work
+            items taken up by the WG which may improvise on the issues
+            mentioned herewith.
+        </t>
+    </section>
+    <section title="Introduction">
+        <t>
+            RPL <xref target="RFC6550"/> specifies a proactive distance-vector
+            routing scheme designed for LLNs (Low Power and Lossy Networks).
+            RPL enables the network to be formed as a DODAG and
+            supports storing mode and non-storing mode of operations.
+            Non-storing mode allows reduced memory resource usage on the nodes
+            by allowing non-BR nodes to operate without managing a routing
+            table and involves use of source routing by the Root to direct the
+            traffic along a specific path. In storing mode of operation
+            the routing happens on hop-by-hop basis and intermediate routers
+            need to maintain routing tables.
+        </t>
+        <t>
+            DAO messaging helps to install downstream routing paths in the
+            DODAG. DAOs are generated on hop-by-hop basis. DAO may contain
+            multiple RPL Control Options. The Target Option identifies the
+            address prefix for which the route has to be installed and the
+            corresponding Transit Information Option identifies the parameters
+            (such as lifetime, freshness-counter, etc) for the target. The DAO
+            base object contains the 'K' flag indicating that a DAO-ACK is
+            sought by the sender. The DAO, DAO-ACK progresses on hop-by-hop
+            basis all the way till Root.
+        </t>
+        <t>
+            This draft highlights various issues with RPL DAO-ACK handling in
+            Storing MOP.  The draft provides requirements to solve the issues
+            and provides an updates to RFC6550 based on these requirements.
+        </t>
+
+        <section title="Requirements Language and Terminology">
+            <t>
+                The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL
+                NOT", "SHOULD", "SHOULD NOT", "RECOMMENDED", "MAY", and
+                "OPTIONAL" in this document are to be interpreted as described
+                in <xref target="RFC2119">RFC 2119</xref>.
+            </t>
+            <t>
+                MOP = Mode of Operation
+            </t>
+            <t>
+                NS-MOP = RPL Non-Storing Mode of Operation
+            </t>
+            <t>
+                S-MOP = RPL Storing Mode of Operation
+            </t>
+            <t>
+                This document uses terminology described in <xref
+                    target="RFC6550"/> and <xref target="RFC6775"/>.
+            </t>
+        </section>
+    </section>
+
+    <section title="Problems with DAO-ACK in Storing MOP" anchor="problems">
+        <t>
+            Consider the following topology for the subsequent description:
+            <figure align="center" anchor="sample_top" title="Sample
+                topology"> <artwork align="center"><![CDATA[
+     (Root)
+        |
+        |
+        |
+       (A)
+       / \
+      /   \
+     /     \
+   (B)    -(C)
+    |    /  |
+    |   /   |
+    |  /    |
+   (D)-    (E)
+     \      ;
+      \    ;
+       \  ;
+        (F)
+        / \
+       /   \
+      /     \
+    (G)     (H)
+                    ]]></artwork> </figure>
+        </t>
+        <section title="End to End Path Establishment Indication">
+            <t>
+                Nodes need to know whether the end to end path till the Root
+                has been established before they can initiate application
+                traffic. In case of NS-MOP, the DAO is addressed to the Root
+                from the Target node and the Root sends DAO-ACK directly
+                addressed back to the target node. Thus in case of NS-MOP, the
+                node can make use of this DAO-ACK as an indication whether the
+                necessary routes have been installed.  However, in case of
+                Storing MOP, the DAO/DAO-ACK signalling happens at every hop.
+                <figure align="center" anchor="nsmop_vs_smop" title="NS-MOP vs
+                    Storing MOP DAO/DAO-ACK handling"> <artwork
+                        align="center"><![CDATA[
+Non-Storing MOP
+| D ======== B ======== A ======== (Root)
+|  ---------------DAO------------>
+|  <-----------DAO-ACK------------
+|
+V
+time
+
+
+Storing MOP
+| D ======== B ======== A ======== (Root)
+|  ---DAO--->
+|  <-DAO-ACK-
+|             ---DAO--->
+|             <-DAO-ACK-
+|                        ---DAO--->
+|                        <-DAO-ACK-
+V
+time
+
+                    ]]></artwork> </figure>
+            </t>
+            <t>
+                Consider <xref target="sample_top"/>, when node D sends a DAO,
+                the node B receives the DAO and instantly sends back DAO-ACK.
+                Node B then subsequently generates the DAO with Target as Node
+                D and sends it to node A. The DAO with Target as Node D may
+                take time (since the DAO is scheduled with DAO_DELAY timer by
+                every node) to finally reach the Root at which point the end to
+                end path is established. There is no way for node D to know
+                when the end to end path is established. This information is
+                needed for node D to initiate its application traffic.
+                Initiating application traffic prior to this might almost
+                certainly lead to application packet retries causing congestion
+                in the network.
+            </t>
+        </section>
+        <section title="Target node unaware if it needs to retry the DAO">
+            <t>
+                It is possible that the intermediate 6LR goes down while
+                attempting to generate DAO on behalf of the target node. In
+                this case, the target node has no way of knowing to retry the
+                DAO, in which case the route installation may not happen until
+                the target node's DAO lifetime expires.
+            </t>
+            <t>
+                Consider <xref target="sample_top"/>, assume that node A was
+                generating DAO with Target node D and sending it to Root.
+                Node A reboots before attempting to send DAO to Root. Node A
+                has already sent DAO-ACK downstream to node B. In this case,
+                the target node D is not aware that sending DAO has failed
+                somewhere upstream. Note that as per RFC6550 upstream DAO is
+                scheduled based on DAO_DELAY but DAO_ACK is sent
+                instantaneously on DAO reception from downstream node.
+            </t>
+        </section>
+    </section>
+
+    <section title="Requirements for DAO-ACK handling in Storing MOP">
+        <t>
+            Following are the requirements:
+            <list style="hanging">
+                <t hangText="Indicate end to end path establishment">
+                </t>
+                <t hangText="Handle aggregated DAOs">
+                </t>
+                <t hangText="Handle DAOs with address prefix">
+                </t>
+                <t hangText="Provide suitable way for target node to retry">
+                </t>
+            </list>
+        </t>
+    </section>
+
+    <section anchor="Acknowledgements" title="Acknowledgements">
+    </section>
+
+    <section anchor="IANA" title="IANA Considerations">
+        <t>New 'K' flag in Transit Information Option.</t>
+    </section>
+
+    <section anchor="Security" title="Security Considerations">
+        <t>
+        </t>
+    </section>
+</middle>
+
+<back>
+    <references title="Normative References">
+        &RFC2119;
+        &RFC6550;
+    </references>
+
+    <references title="Informative References">
+        <reference anchor="Perlman83">
+            <front>
+                <title>Fault-Tolerant Broadcast of Routing Information</title>
+                <author initials="R" surname="Perlman">
+                    <organization></organization>
+                </author>
+                <date year="December 1983" />
+            </front>
+            <seriesInfo name="North-Holland Computer Networks," value="Vol.7"/>
+        </reference>
+    </references>
+</back>
+</rfc>
