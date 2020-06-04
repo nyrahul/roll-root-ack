@@ -110,13 +110,21 @@
                 in <xref target="RFC2119">RFC 2119</xref>.
             </t>
             <t>
-                MOP = Mode of Operation
+                MOP: Mode of Operation
             </t>
             <t>
-                NS-MOP = RPL Non-Storing Mode of Operation
+                NS-MOP: RPL Non-Storing Mode of Operation
             </t>
             <t>
-                S-MOP = RPL Storing Mode of Operation
+                S-MOP: RPL Storing Mode of Operation
+            </t>
+            <t>
+                Root-ACK: A DAO-ACK message directly addressed to the target
+                node.
+            </t>
+            <t>
+                DelayDAO: Section 9.5 of RFC6550 introduces a delay before the
+                DAO transmission is initiated.
             </t>
             <t>
                 This document uses terminology described in <xref
@@ -196,7 +204,7 @@ time
                 the node B receives the DAO and instantly sends back DAO-ACK.
                 Node B then subsequently generates the DAO with Target as Node
                 D and sends it to node A. The DAO with Target as Node D may
-                take time (since the DAO is scheduled with DAO_DELAY timer by
+                take time (since the DAO is scheduled with DelayDAO timer by
                 every node) to finally reach the Root at which point the end to
                 end path is established. There is no way for node D to know
                 when the end to end path is established. This information is
@@ -221,7 +229,7 @@ time
                 has already sent DAO-ACK downstream to node B. In this case,
                 the target node D is not aware that sending DAO has failed
                 somewhere upstream. Note that as per RFC6550 upstream DAO is
-                scheduled based on DAO_DELAY but DAO_ACK is sent
+                scheduled based on DelayDAO but DAO_ACK is sent
                 instantaneously on DAO reception from downstream node.
             </t>
         </section>
@@ -280,6 +288,10 @@ time
 | Path Sequence | Path Lifetime |
 +-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+
                         ]]></artwork> </figure>
+            </t>
+            <t>
+                The K flag indicates that the Root of the RPLInstance MUST send
+                a Root-ACK directly to the target node.
             </t>
         </section>
         <section title="Root sends DAO-ACK addressed to Target">

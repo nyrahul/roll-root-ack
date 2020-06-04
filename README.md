@@ -2,6 +2,10 @@
 
 This is the working area for the individual Internet-Draft, "RPL Storing Root Ack".
 
+## Draft Abstract
+
+This document explains problems with DAO-ACK handling in RPL Storing MOP and provides updates to RFC6550 to solve those problems.
+
 * [Editor's Copy](https://nyrahul.github.io/roll-root-ack/#go.draft-jadhav-roll-storing-rootack.html)
 * [Individual Draft](https://tools.ietf.org/html/draft-jadhav-roll-storing-rootack)
 * [Compare Editor's Copy to Individual Draft](https://nyrahul.github.io/roll-root-ack/#go.draft-jadhav-roll-storing-rootack.diff)
