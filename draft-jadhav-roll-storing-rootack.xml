@@ -30,7 +30,7 @@
 
   <front>
 
-    <title abbrev="Storing Root Ack">RPL Storing Root Ack</title>
+    <title abbrev="Storing Root-ACK">RPL Storing Root-ACK</title>
 
     <author fullname="Rahul Arvind Jadhav" initials="R.A." role="editor" surname="Jadhav">
         <organization>Huawei</organization>
@@ -62,16 +62,6 @@
 </front>
 
 <middle>
-    <section title="Motivation">
-        <t>
-            The primary motivation for this draft is to enlist different issues
-            with RPL operation and invoke a discussion within the working
-            group. This draft by itself is not intended for RFC tracks but as a
-            WG discussion track. This draft may in turn result in other work
-            items taken up by the WG which may improvise on the issues
-            mentioned herewith.
-        </t>
-    </section>
     <section title="Introduction">
         <t>
             RPL <xref target="RFC6550"/> specifies a proactive distance-vector
@@ -94,11 +84,17 @@
             (such as lifetime, freshness-counter, etc) for the target. The DAO
             base object contains the 'K' flag indicating that a DAO-ACK is
             sought by the sender. The DAO, DAO-ACK progresses on hop-by-hop
-            basis all the way till Root.
+            basis all the way till Root. In non-storing MOP, the DAO from the
+            target node is directly addressed to the Root and the Root responds
+            with a DAO-ACK indicating path establishment status. However, in
+            storing MOP, the DAO-ACK is immediately sent by the upstream parent.
+            Thus in case of storing MOP, the target node cannot rely on DAO-ACK
+            as an indication that the end to end (from the target node to Root)
+            path has been established.
         </t>
         <t>
             This draft highlights various issues with RPL DAO-ACK handling in
-            Storing MOP.  The draft provides requirements to solve the issues
+            Storing MOP. The draft provides requirements to solve the issues
             and provides an updates to RFC6550 based on these requirements.
         </t>
 
@@ -119,12 +115,23 @@
                 S-MOP: RPL Storing Mode of Operation
             </t>
             <t>
-                Root-ACK: A DAO-ACK message directly addressed to the target
-                node.
+                Root-ACK: The Root-ACK syntax is same as DAO-ACK except that the
+                Root-ACK is addressed directly to the peer who owns the target
+                prefix. DAO-ACK in contrast is always sent using link-local IPv6
+                address in storing MOP.
             </t>
             <t>
                 DelayDAO: Section 9.5 of RFC6550 introduces a delay before the
                 DAO transmission is initiated.
+            </t>
+            <t>
+                TIO: (Transit Information Option) Section 6.7.8 of RFC6550. TIO
+                is an option usually carried in DAO message and augments control
+                information for the advertised Target.
+            </t>
+            <t>
+                RUL: (RPL Unaware Leaf)
+                <xref target="I-D.ietf-roll-unaware-leaves"/>
             </t>
             <t>
                 This document uses terminology described in <xref
@@ -170,7 +177,7 @@
                 addressed back to the target node. Thus in case of NS-MOP, the
                 node can make use of this DAO-ACK as an indication whether the
                 necessary routes have been installed.  However, in case of
-                Storing MOP, the DAO/DAO-ACK signalling happens at every hop.
+                Storing MOP, the DAO/DAO-ACK signaling happens at every hop.
                 <figure align="center" anchor="nsmop_dao" title="NS-MOP
                     DAO/DAO-ACK handling"> <artwork align="center"><![CDATA[
 Non-Storing MOP
@@ -200,6 +207,14 @@ time
                     ]]></artwork> </figure>
             </t>
             <t>
+                Note that in Storing-MOP, the DAO/DAO-ACK signaling happens on
+                hop-by-hop basis and a DelayDAO timer is used
+                before intermediate 6LRs generate the DAO. This
+                would mean that the DAO reaching the Root may take
+                several seconds. The target node should not generate the
+                application traffic unless the end to end path is established.
+            </t>
+            <t>
                 Consider <xref target="sample_top"/>, when node D sends a DAO,
                 the node B receives the DAO and instantly sends back DAO-ACK.
                 Node B then subsequently generates the DAO with Target as Node
@@ -214,7 +229,7 @@ time
                 in the network.
             </t>
         </section>
-        <section title="Target node unaware if it needs to retry the DAO">
+        <section title="Target node is unaware if it needs to retry the DAO">
             <t>
                 It is possible that the intermediate 6LR goes down while
                 attempting to generate DAO on behalf of the target node. In
@@ -229,13 +244,23 @@ time
                 has already sent DAO-ACK downstream to node B. In this case,
                 the target node D is not aware that sending DAO has failed
                 somewhere upstream. Note that as per RFC6550 upstream DAO is
-                scheduled based on DelayDAO but DAO_ACK is sent
+                scheduled based on DelayDAO but DAO-ACK is sent
                 instantaneously on DAO reception from downstream node.
+            </t>
+        </section>
+        <section title="RPL node acting as router for RULs">
+            <t>
+                An RPL node may act as a router for RPL unware leaves as
+                described in <xref target='I-D.ietf-roll-unaware-leaves'/>.
+                Ideally an RPL node should start accepting RULs solicitation
+                only after making sure that it has established itself in the
+                network first. In Storing-MOP, there is no way to ascertain
+                this.
             </t>
         </section>
     </section>
 
-    <section title="Requirements for DAO-ACK handling in Storing MOP">
+    <section title="Requirements for Root-ACK handling in Storing MOP">
         <t>
             Following are the requirements:
             <list style="hanging">
@@ -245,7 +270,7 @@ time
                 </t>
                 <t hangText="Handle multiple targets in DAOs">
                     A DAO message may contain multiple Target Options. The
-                    DAO-ACK mechanism must handle multiple targets in DAO.
+                    Root-ACK mechanism must handle multiple targets in DAO.
                 </t>
                 <t hangText="Handle DAOs with address prefix">
                     RPL DAO Target Option may contain an address prefix i.e.,
@@ -263,17 +288,20 @@ time
         </t>
     </section>
 
-    <section title="DAO-ACK from Root">
+    <section title="Root-ACK from Root">
         <t>
-            The draft defines a way for the RPL Root to send the DAO-ACK back
+            The draft defines a way for the RPL Root to send the Root-ACK back
             directly addressed to the Target node. The Target node can receive
-            the DAO-ACK directly thus getting an indication that the end to end
-            path till the Root has been successfully established.
+            the Root-ACK directly thus getting an indication that the end to end
+            path till the Root has been successfully established. The Root-ACK
+            uses the same syntax and message code as DAO-ACK. The only
+            difference is that the Root-ACK is directly addressed to the Target
+            node who owns the advertised prefix in the Target Option.
         </t>
         <section title="Transit Information Option update in DAO message"
             anchor="transit_opt_changes">
             <t>
-                The Target node indicates that it wishes to receive DAO-ACK
+                The Target node indicates that it wishes to receive Root-ACK
                 directly from Root by setting the newly defined 'K' flag in
                 Transit Information Option.
             </t>
@@ -294,26 +322,41 @@ time
                 a Root-ACK directly to the target node.
             </t>
         </section>
-        <section title="Root sends DAO-ACK addressed to Target">
+        <section title="Root sends Root-ACK addressed to Target">
             <t>
                 On receiving a DAO with Transit Information Option with 'K'
-                flag set, the Root MUST respond with a DAO-ACK immediately to
+                flag set, the Root MUST respond with a Root-ACK immediately to
                 the address extracted from the corresponding Target Option.
             </t>
             <t>
-                The DAO-ACK MUST contain the Transit Information Option with
+                The Root-ACK MUST contain the Transit Information Option with
                 parameters copied from the DAO's Transit Information Option
-                based on which this DAO-ACK was generated. The PathSequence in
+                based on which this Root-ACK was generated. The PathSequence in
                 the Transit Information Option helps the Target node to
                 identify for which DAO it generated it has received the
-                DAO-ACK. The DAOSequence in the base DAO object is ignored by
-                the Target node.
+                Root-ACK. The DAOSequence in the base Root-ACK(DAO-ACK) base
+                object is ignored by the Target node.
             </t>
         </section>
+        <!--
+        <section title="Handling RPL Unaware Leaves (RULs)">
+            <t>
+                <xref target='I-D.ietf-roll-unaware-leaves'/>
+                extends RFC6550 to provide RPL routing services to RULs that
+                do not directly participate to RPL. A RUL node also faces the
+                same problems as discussed in <xref target="problems"/>.
+            </t>
+            <t>
+                Section 9 of <xref target="I-D.ietf-roll-unaware-leaves"/>
+                explains the first registration flow for an RUL node. RUL
+                sends an NS(EARO)
+            </t>
+        </section>
+        -->
     </section>
 
-    <section anchor="Acknowledgements" title="Acknowledgements">
-    </section>
+    <!-- <section anchor="Acknowledgements" title="Acknowledgements">
+    </section> -->
 
     <section anchor="IANA" title="IANA Considerations">
         <t>
@@ -333,6 +376,7 @@ time
     <references title="Normative References">
         &RFC2119;
         &RFC6550;
+        <?rfc include='reference.I-D.ietf-roll-unaware-leaves'?>
     </references>
 
     <references title="Informative References">
