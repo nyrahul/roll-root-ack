@@ -33,10 +33,9 @@
     <title abbrev="Storing Root-ACK">RPL Storing Root-ACK</title>
 
     <author fullname="Rahul Arvind Jadhav" initials="R.A." role="editor" surname="Jadhav">
-        <organization>Huawei</organization>
         <address>
             <postal>
-                <street>Whitefield,</street>
+                <street>Marathahalli</street>
                 <city>Bangalore</city>
                 <region>Karnataka</region>
                 <code>560037</code>
@@ -94,8 +93,11 @@
         </t>
         <t>
             This draft highlights various issues with RPL DAO-ACK handling in
-            Storing MOP. The draft provides requirements to solve the issues
-            and provides an updates to RFC6550 based on these requirements.
+			Storing MOP. Section 4 of <xref
+				target="I-D.ietf-roll-rpl-observations"/> provides more context
+			to the problem statement. The draft provides requirements to solve
+			the issues and provides an updates to RFC6550 based on these
+			requirements.
         </t>
 
         <section title="Requirements Language and Terminology">
@@ -368,7 +370,33 @@ time
 
     <section anchor="Security" title="Security Considerations">
         <t>
+			This node introduces a new flag in response to which the Root of
+			the DODAG would send a Root-ACK which serves as an indication for
+			the target node that the end to end route/path is established. The
+			Root-ACK indication eventually would be used by the end node for
+			application layer processing such as initiating the application
+			traffic. A malicious node could generate the Root-ACK pre-maturely
+			i.e, before the end-to-end path is established and cause the
+			application to do some processing pre-maturely. However, the
+			application layer would always account for application layer
+			failures and thus shouldn't result in any security issues. This
+			could result in more control overhead which is currently the case
+			where nodes do not support this specification.
         </t>
+		<t>
+			A malicious 6LR or 6LN could set the 'K' flag indicating the Root
+			to send a Root-ACK. The Root would generate a Root-ACK for the
+			indicated target. The Root need not keep any additional state for
+			handling the 'K' flag.
+		</t>
+		<t>
+			This document assumes that the security mechanisms as defined in
+			<xref target="RFC6550"/> are followed, which means that all the
+			nodes are part of the RPL network because they have the required
+			credentials. A non-secure RPL network needs to take into
+			consideration the risks highlighted in this section as well as
+			those highlighted in <xref target="RFC6550"/>.
+		</t>
     </section>
 </middle>
 
@@ -376,20 +404,11 @@ time
     <references title="Normative References">
         &RFC2119;
         &RFC6550;
-        <?rfc include='reference.I-D.ietf-roll-unaware-leaves'?>
+        <?rfc include='reference.I-D.ietf-roll-unaware-leaves.xml'?>
     </references>
 
     <references title="Informative References">
-        <reference anchor="Perlman83">
-            <front>
-                <title>Fault-Tolerant Broadcast of Routing Information</title>
-                <author initials="R" surname="Perlman">
-                    <organization></organization>
-                </author>
-                <date year="December 1983" />
-            </front>
-            <seriesInfo name="North-Holland Computer Networks," value="Vol.7"/>
-        </reference>
+        <?rfc include='reference.I-D.ietf-roll-rpl-observations.xml'?>
     </references>
 </back>
 </rfc>
